@@ -13,17 +13,17 @@ const path = require('path');
 const PLATFORMS = [
   {
     name: 'pantheon',
-    repo: 'pantheon-benchmark', // TODO: Update with actual org/repo
-    method: 'git' // or 'api' if using platform API
+    repo: 'DuncanSchouten/pantheon-benchmark',
+    method: 'git'
   },
   {
     name: 'vercel',
-    repo: 'vercel-benchmark', // TODO: Update with actual org/repo
+    repo: 'DuncanSchouten/vercel-benchmark',
     method: 'git'
   },
   {
     name: 'netlify',
-    repo: 'netlify-benchmark', // TODO: Update with actual org/repo
+    repo: 'DuncanSchouten/netlify-benchmark',
     method: 'git'
   }
 ];
