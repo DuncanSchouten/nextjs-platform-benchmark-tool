@@ -41,11 +41,8 @@ function exec(command, options = {}) {
   }
 }
 
-async function setupGit() {
-  console.log('Setting up git configuration...');
-  exec('git config --global user.email "benchmark-bot@pantheon.io"');
-  exec('git config --global user.name "Benchmark Bot"');
-}
+// Note: Git config is set locally per-repo after cloning (see pushToPlatformRepo)
+// This avoids polluting global git config
 
 async function copyBenchmarkApp(tempDir) {
   console.log('Copying benchmark app to temp directory...');
@@ -75,6 +72,10 @@ async function pushToPlatformRepo(platform, tempDir) {
     // Clone the platform repo
     console.log(`Cloning ${platform.repo}...`);
     exec(`git clone ${repoUrl} ${platformTempDir}`, { silent: true });
+
+    // Set local git config for this repo (avoids polluting global config)
+    exec('git config user.email "benchmark-bot@pantheon.io"', { cwd: platformTempDir });
+    exec('git config user.name "Benchmark Bot"', { cwd: platformTempDir });
 
     // Copy benchmark app files
     console.log('Copying benchmark app files...');
@@ -134,7 +135,6 @@ async function main() {
   const originalDir = process.cwd();
 
   try {
-    await setupGit();
     await copyBenchmarkApp(tempDir);
 
     const results = [];
