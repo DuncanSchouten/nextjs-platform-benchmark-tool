@@ -9,7 +9,7 @@ export default function Navigation() {
             Benchmark
           </Link>
 
-          <div className="flex space-x-8">
+          <div className="flex space-x-6">
             <Link
               href="/"
               className="text-gray-700 hover:text-blue-600 transition-colors"
@@ -17,22 +17,34 @@ export default function Navigation() {
               Home
             </Link>
             <Link
-              href="/about"
+              href="/services"
               className="text-gray-700 hover:text-blue-600 transition-colors"
             >
-              About
+              Services
             </Link>
             <Link
-              href="/products"
+              href="/pricing"
               className="text-gray-700 hover:text-blue-600 transition-colors"
             >
-              Products
+              Pricing
+            </Link>
+            <Link
+              href="/case-studies"
+              className="text-gray-700 hover:text-blue-600 transition-colors"
+            >
+              Case Studies
             </Link>
             <Link
               href="/blog"
               className="text-gray-700 hover:text-blue-600 transition-colors"
             >
               Blog
+            </Link>
+            <Link
+              href="/team"
+              className="text-gray-700 hover:text-blue-600 transition-colors"
+            >
+              Team
             </Link>
             <Link
               href="/contact"

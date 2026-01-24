@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 const posts = [
   {
-    id: 1,
+    slug: 'understanding-build-times',
     title: 'Understanding Build Times in Modern Web Development',
     excerpt: 'A deep dive into what affects build performance and how to optimize it.',
     date: '2024-01-15',
@@ -16,7 +16,7 @@ const posts = [
     readTime: '5 min read',
   },
   {
-    id: 2,
+    slug: 'platform-comparison',
     title: 'Platform Comparison: What to Look For',
     excerpt: 'Key metrics and features to consider when choosing a hosting platform.',
     date: '2024-01-10',
@@ -24,7 +24,7 @@ const posts = [
     readTime: '7 min read',
   },
   {
-    id: 3,
+    slug: 'nextjs-deployment-evolution',
     title: 'The Evolution of Next.js Deployment',
     excerpt: 'How deployment strategies have changed with Next.js 14 and beyond.',
     date: '2024-01-05',
@@ -32,7 +32,7 @@ const posts = [
     readTime: '6 min read',
   },
   {
-    id: 4,
+    slug: 'core-web-vitals',
     title: 'Optimizing for Core Web Vitals',
     excerpt: 'Best practices for improving your application\'s performance metrics.',
     date: '2024-01-01',
@@ -53,10 +53,10 @@ export default function BlogPage() {
         <div className="space-y-8">
           {posts.map((post) => (
             <article
-              key={post.id}
+              key={post.slug}
               className="border-b border-gray-200 pb-8 last:border-0"
             >
-              <Link href={`/blog/${post.id}`} className="group">
+              <Link href={`/blog/${post.slug}`} className="group">
                 <h2 className="text-2xl font-bold mb-2 group-hover:text-blue-600 transition-colors">
                   {post.title}
                 </h2>
@@ -73,7 +73,7 @@ export default function BlogPage() {
               <p className="text-gray-700 mb-4">{post.excerpt}</p>
 
               <Link
-                href={`/blog/${post.id}`}
+                href={`/blog/${post.slug}`}
                 className="text-blue-600 hover:text-blue-800 font-medium"
               >
                 Read more →
