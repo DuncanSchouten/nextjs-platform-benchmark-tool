@@ -247,18 +247,22 @@ CREATE TABLE platform_builds (
 ### Phase 1: MVP (Core Build Benchmarking)
 - [x] Planning (this document)
 - [x] Set up monorepo structure
-- [x] Create benchmark Next.js app (medium-sized)
-- [x] Set up Cloud SQL database + migrations
-- [x] Create GitHub Actions workflow skeleton
-  - [x] Trigger builds on all platforms (git push)
-  - [ ] Implement GCP Cloud Build polling for Pantheon (needs internal credentials)
-  - [ ] Implement Vercel API polling
-  - [ ] Implement Netlify API polling
-  - [ ] Record to database
-- [x] Build dashboard (basic charts)
-- [ ] Implement Google SSO authentication
+- [x] Create benchmark Next.js app (18 pages, 14 dependencies, 3 API routes)
+- [x] Create three external benchmark repos (pantheon-benchmark, vercel-benchmark, netlify-benchmark)
+- [x] Set up Cloud SQL database schema + migrations (not yet deployed)
+- [x] Create GitHub Actions workflow
+  - [x] Trigger builds on all platforms (git push via trigger-builds.js)
+  - [x] Implement GCP Cloud Build polling for Pantheon (poll-pantheon-internal.js created, needs internal credentials)
+  - [ ] Implement Vercel API polling (placeholder in poll-and-record.js)
+  - [ ] Implement Netlify API polling (placeholder in poll-and-record.js)
+  - [x] Record to database (poll-and-record.js created, needs testing)
+- [x] Build dashboard (basic charts and components)
+- [ ] Implement Google SSO authentication (deferred to Phase 2)
+- [ ] Deploy Cloud SQL instance
+- [ ] Obtain GCP service account credentials (internal DevOps)
+- [ ] Configure GitHub Secrets
 - [ ] Deploy dashboard to Pantheon
-- [ ] Obtain GCP service account (internal DevOps)
+- [ ] Debug Pantheon build failures (currently failing while Vercel/Netlify succeed)
 - [ ] Run first successful benchmark
 
 ### Phase 2: Enhanced Monitoring
@@ -366,7 +370,13 @@ CREATE TABLE platform_builds (
 
 ## Next Steps
 
-1. Review and approve this plan
-2. Create the three external benchmark repos (pantheon-benchmark, vercel-benchmark, netlify-benchmark)
-3. Set up Cloud SQL instance
-4. Begin Phase 1 implementation
+1. ~~Review and approve this plan~~ ✅
+2. ~~Create the three external benchmark repos (pantheon-benchmark, vercel-benchmark, netlify-benchmark)~~ ✅
+3. ~~Begin Phase 1 implementation~~ ✅ (In Progress)
+4. **Debug Pantheon build failures** - Currently Vercel and Netlify builds succeed but Pantheon fails
+5. Set up Cloud SQL instance
+6. Obtain GCP service account credentials (internal DevOps request)
+7. Configure GitHub Secrets for workflow
+8. Complete Vercel and Netlify API polling implementation
+9. Test end-to-end benchmark workflow
+10. Deploy dashboard to Pantheon
