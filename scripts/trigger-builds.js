@@ -87,7 +87,7 @@ async function pushToPlatformRepo(platform, tempDir) {
     exec('git add .');
 
     const timestamp = new Date().toISOString();
-    const commitMessage = `Benchmark run - ${timestamp}\n\n[skip ci]`;
+    const commitMessage = `Benchmark run - ${timestamp}`;
 
     try {
       exec(`git commit -m "${commitMessage}"`);
