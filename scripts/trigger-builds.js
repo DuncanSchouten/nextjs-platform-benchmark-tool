@@ -81,12 +81,16 @@ async function pushToPlatformRepo(platform, tempDir) {
     console.log('Copying benchmark app files...');
     exec(`rsync -av --exclude='.git' --exclude='pantheon' --exclude='vercel' --exclude='netlify' ${tempDir}/ ${platformTempDir}/`, { silent: true });
 
+    // Create a timestamp file to ensure there's always a change to commit
+    const timestamp = new Date().toISOString();
+    const timestampFile = path.join(platformTempDir, '.benchmark-timestamp');
+    fs.writeFileSync(timestampFile, `Benchmark run: ${timestamp}\n`);
+
     // Commit and push
     process.chdir(platformTempDir);
 
     exec('git add .');
 
-    const timestamp = new Date().toISOString();
     const commitMessage = `Benchmark run - ${timestamp}`;
 
     try {
