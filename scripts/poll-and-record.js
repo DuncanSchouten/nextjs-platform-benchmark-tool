@@ -1,13 +1,16 @@
 #!/usr/bin/env node
 
 /**
- * Poll platform APIs to monitor build status and record metrics to database
+ * Poll platform deployment URLs to monitor build completion and record metrics to database
+ * Uses HTTP polling to check /api/build-info endpoint for commit SHA
  * This runs after trigger-builds.js in GitHub Actions
  */
 
 const { Client } = require('pg');
 const fs = require('fs');
 const path = require('path');
+const https = require('https');
+const http = require('http');
 
 // Configuration
 const POLL_INTERVAL_MS = 10000; // 10 seconds
@@ -77,75 +80,109 @@ class BenchmarkRecorder {
   }
 }
 
-class PlatformPoller {
-  constructor(platform, apiToken) {
+class HttpPoller {
+  constructor(platform, deploymentUrl) {
     this.platform = platform;
-    this.apiToken = apiToken;
+    this.deploymentUrl = deploymentUrl;
   }
 
-  async getBuildStatus(buildId) {
-    // This is a placeholder - implement actual API calls per platform
-    // Each platform has different API endpoints and response formats
+  /**
+   * Fetch URL and return response body
+   */
+  async fetchUrl(url) {
+    return new Promise((resolve, reject) => {
+      const protocol = url.startsWith('https') ? https : http;
 
-    switch (this.platform) {
-      case 'pantheon':
-        return this.getPantheonBuildStatus(buildId);
-      case 'vercel':
-        return this.getVercelBuildStatus(buildId);
-      case 'netlify':
-        return this.getNetlifyBuildStatus(buildId);
-      default:
-        throw new Error(`Unknown platform: ${this.platform}`);
-    }
+      protocol.get(url, { timeout: 10000 }, (res) => {
+        let data = '';
+
+        res.on('data', (chunk) => {
+          data += chunk;
+        });
+
+        res.on('end', () => {
+          resolve({ status: res.statusCode, body: data });
+        });
+      }).on('error', (err) => {
+        reject(err);
+      });
+    });
   }
 
-  async getPantheonBuildStatus(buildId) {
-    // TODO: Implement Pantheon API call
-    // Placeholder implementation
-    console.log(`[${this.platform}] Checking build status... (TODO: implement API)`);
+  /**
+   * Check if deployment is live with expected commit SHA
+   * First tries /api/build-info, falls back to HTML meta tag
+   */
+  async checkDeployment(expectedCommitSha) {
+    try {
+      // Try API endpoint first
+      const buildInfoUrl = `${this.deploymentUrl}/api/build-info`;
+      const response = await this.fetchUrl(buildInfoUrl);
 
-    // Simulated response - replace with actual API call
-    return {
-      status: 'success', // 'success', 'failure', 'in_progress'
-      completed: true,
-      completionTime: new Date(),
-      metadata: {
-        // Platform-specific data
+      if (response.status === 200) {
+        const buildInfo = JSON.parse(response.body);
+        const liveCommitSha = buildInfo.commitSha;
+
+        if (liveCommitSha === expectedCommitSha) {
+          return {
+            deployed: true,
+            method: 'api',
+            metadata: buildInfo
+          };
+        } else {
+          return {
+            deployed: false,
+            liveCommitSha,
+            expectedCommitSha,
+            method: 'api'
+          };
+        }
       }
-    };
-  }
+    } catch (error) {
+      console.log(`[${this.platform}] API endpoint failed, trying HTML fallback...`);
+    }
 
-  async getVercelBuildStatus(buildId) {
-    // TODO: Implement Vercel API call
-    // Reference: https://vercel.com/docs/rest-api/endpoints/deployments
-    console.log(`[${this.platform}] Checking build status... (TODO: implement API)`);
+    // Fallback to HTML meta tag
+    try {
+      const response = await this.fetchUrl(this.deploymentUrl);
 
-    // Placeholder
+      if (response.status === 200) {
+        const match = response.body.match(/name="deployment-sha"\s+content="([^"]+)"/);
+
+        if (match) {
+          const liveCommitSha = match[1];
+
+          if (liveCommitSha === expectedCommitSha) {
+            return {
+              deployed: true,
+              method: 'html',
+              metadata: { liveCommitSha }
+            };
+          } else {
+            return {
+              deployed: false,
+              liveCommitSha,
+              expectedCommitSha,
+              method: 'html'
+            };
+          }
+        }
+      }
+    } catch (error) {
+      console.error(`[${this.platform}] HTML fallback failed:`, error.message);
+    }
+
+    // If both methods fail
     return {
-      status: 'success',
-      completed: true,
-      completionTime: new Date(),
-      metadata: {}
-    };
-  }
-
-  async getNetlifyBuildStatus(buildId) {
-    // TODO: Implement Netlify API call
-    // Reference: https://docs.netlify.com/api/get-started/
-    console.log(`[${this.platform}] Checking build status... (TODO: implement API)`);
-
-    // Placeholder
-    return {
-      status: 'success',
-      completed: true,
-      completionTime: new Date(),
-      metadata: {}
+      deployed: false,
+      error: 'Unable to check deployment status'
     };
   }
 }
 
-async function pollUntilComplete(poller, buildId, maxWaitMs) {
+async function pollUntilDeployed(poller, expectedCommitSha, maxWaitMs) {
   const startTime = Date.now();
+  let lastLiveCommitSha = null;
 
   while (true) {
     const elapsed = Date.now() - startTime;
@@ -154,29 +191,41 @@ async function pollUntilComplete(poller, buildId, maxWaitMs) {
       console.log(`[${poller.platform}] ⏱️  Timeout after ${elapsed / 1000}s`);
       return {
         status: 'timeout',
-        completed: true,
         completionTime: new Date(),
-        metadata: { timeout: true }
+        metadata: { timeout: true, lastLiveCommitSha }
       };
     }
 
     try {
-      const buildStatus = await poller.getBuildStatus(buildId);
+      const checkResult = await poller.checkDeployment(expectedCommitSha);
 
-      if (buildStatus.completed) {
+      if (checkResult.deployed) {
         const duration = (Date.now() - startTime) / 1000;
-        console.log(`[${poller.platform}] ✅ Completed in ${duration.toFixed(2)}s - ${buildStatus.status}`);
-        return buildStatus;
+        console.log(`[${poller.platform}] ✅ Deployed in ${duration.toFixed(2)}s (via ${checkResult.method})`);
+        return {
+          status: 'success',
+          completionTime: new Date(),
+          metadata: {
+            duration,
+            method: checkResult.method,
+            ...checkResult.metadata
+          }
+        };
       }
 
-      console.log(`[${poller.platform}] ⏳ Still building... (${(elapsed / 1000).toFixed(0)}s elapsed)`);
+      // Log progress
+      if (checkResult.liveCommitSha !== lastLiveCommitSha) {
+        console.log(`[${poller.platform}] 🔄 Live SHA: ${checkResult.liveCommitSha?.substring(0, 7) || 'unknown'}, Expected: ${expectedCommitSha.substring(0, 7)}`);
+        lastLiveCommitSha = checkResult.liveCommitSha;
+      }
+
+      console.log(`[${poller.platform}] ⏳ Waiting for deployment... (${(elapsed / 1000).toFixed(0)}s elapsed)`);
       await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL_MS));
 
     } catch (error) {
       console.error(`[${poller.platform}] ❌ Error polling:`, error.message);
       return {
         status: 'failure',
-        completed: true,
         completionTime: new Date(),
         metadata: { error: error.message }
       };
@@ -185,12 +234,27 @@ async function pollUntilComplete(poller, buildId, maxWaitMs) {
 }
 
 async function main() {
-  console.log('🔍 Starting build monitoring...\n');
+  console.log('🔍 Starting deployment monitoring via HTTP polling...\n');
 
   const recorder = new BenchmarkRecorder();
   const triggerResults = JSON.parse(
     fs.readFileSync(path.join(process.cwd(), 'trigger-results.json'), 'utf8')
   );
+
+  // Get deployment URLs from environment
+  const deploymentUrls = {
+    pantheon: process.env.PANTHEON_SITE_URL,
+    vercel: process.env.VERCEL_SITE_URL,
+    netlify: process.env.NETLIFY_SITE_URL,
+  };
+
+  // Validate URLs
+  for (const platform of PLATFORMS) {
+    if (!deploymentUrls[platform]) {
+      console.error(`❌ Missing ${platform.toUpperCase()}_SITE_URL environment variable`);
+      process.exit(1);
+    }
+  }
 
   try {
     await recorder.connect();
@@ -198,11 +262,7 @@ async function main() {
 
     // Create pollers for each platform
     const pollers = PLATFORMS.map(platform => {
-      const apiToken = process.env[`${platform.toUpperCase()}_API_TOKEN`];
-      if (!apiToken) {
-        console.warn(`⚠️  No API token for ${platform}`);
-      }
-      return new PlatformPoller(platform, apiToken);
+      return new HttpPoller(platform, deploymentUrls[platform]);
     });
 
     // Poll all platforms in parallel
@@ -228,10 +288,10 @@ async function main() {
         triggerResult.commitHash
       );
 
-      console.log(`[${platform}] 📊 Monitoring build #${buildRecordId}...`);
+      console.log(`[${platform}] 📊 Monitoring deployment for commit ${triggerResult.commitHash.substring(0, 7)}...`);
 
-      // Poll until complete
-      const result = await pollUntilComplete(
+      // Poll until deployed
+      const result = await pollUntilDeployed(
         poller,
         triggerResult.commitHash,
         MAX_WAIT_TIME_MS
@@ -249,7 +309,7 @@ async function main() {
 
     await Promise.all(monitoringTasks);
 
-    console.log('\n✨ All builds monitored and recorded');
+    console.log('\n✨ All deployments monitored and recorded');
 
   } catch (error) {
     console.error('\n❌ Fatal error:', error);

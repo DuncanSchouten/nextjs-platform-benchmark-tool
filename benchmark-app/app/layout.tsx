@@ -23,8 +23,18 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Get commit SHA from environment variables for deployment tracking
+  const commitSha =
+    process.env.VERCEL_GIT_COMMIT_SHA ||
+    process.env.NETLIFY_COMMIT_REF ||
+    process.env.COMMIT_SHA ||
+    'unknown';
+
   return (
     <html lang="en">
+      <head>
+        <meta name="deployment-sha" content={commitSha} />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
