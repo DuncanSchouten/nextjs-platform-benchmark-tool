@@ -1,0 +1,25 @@
+[[build.env]]
+name = "NODE_ENV"
+value = "production"
+
+[[build.env]]
+name = "NPM_CONFIG_PRODUCTION"
+value = "false"
+
+[[build.buildpacks]]
+uri = "gcr.io/buildpacks/nodejs"
+
+[build]
+include = [
+  "app/**",
+  "components/**",
+  "lib/**",
+  "public/**",
+  "*.js",
+  "*.ts",
+  "*.json",
+  "*.mjs",
+  "*.config.*",
+  "Procfile",
+  ".next/**"
+]
