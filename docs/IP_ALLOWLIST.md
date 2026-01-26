@@ -21,7 +21,7 @@ The Cloud SQL instance `benchmark-db` has been configured with the following IP 
 Since we're allowing connections from any IP (`0.0.0.0/0`), security relies on:
 
 1. **Strong Password Authentication**
-   - Database password: `TempPass123!`
+   - Database password: `TempPass123`
    - Only authorized users have access to credentials
 
 2. **Limited to PostgreSQL Port**
@@ -54,7 +54,7 @@ chmod +x cloud-sql-proxy
 
 **Connection String with Proxy:**
 ```
-postgresql://postgres:TempPass123!@127.0.0.1:5432/benchmarks
+postgresql://postgres:TempPass123@127.0.0.1:5432/benchmarks
 ```
 
 ## Pantheon-Specific Considerations
@@ -72,7 +72,7 @@ References:
 ## Current Database URL
 
 ```
-postgresql://postgres:TempPass123!@34.55.232.223/benchmarks
+postgresql://postgres:TempPass123@34.55.232.223/benchmarks
 ```
 
 **Note**: This needs to be set as the `DATABASE_URL` environment variable in:

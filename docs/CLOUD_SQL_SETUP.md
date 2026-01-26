@@ -27,7 +27,7 @@ You need to configure the following secrets in your GitHub repository:
 
 For direct connection (current setup):
 ```
-postgresql://postgres:TempPass123!@34.55.232.223/benchmarks
+postgresql://postgres:TempPass123@34.55.232.223/benchmarks
 ```
 
 ### 2. BENCHMARK_REPO_PAT
@@ -61,7 +61,7 @@ For better security, update `.github/workflows/benchmark.yml` to use Cloud SQL P
 
 - name: Poll deployment URLs and record metrics
   env:
-    DATABASE_URL: postgresql://postgres:TempPass123!@localhost/benchmarks
+    DATABASE_URL: postgresql://postgres:TempPass123@localhost/benchmarks
     # ... other env vars
 ```
 
@@ -100,12 +100,12 @@ gcloud iam service-accounts keys create ~/github-actions-key.json \
 
 Test the connection locally:
 ```bash
-PGPASSWORD="TempPass123!" psql -h 34.55.232.223 -U postgres -d benchmarks -c "SELECT NOW();"
+PGPASSWORD="TempPass123" psql -h 34.55.232.223 -U postgres -d benchmarks -c "SELECT NOW();"
 ```
 
 Test with connection string:
 ```bash
-psql "postgresql://postgres:TempPass123!@34.55.232.223/benchmarks" -c "\dt"
+psql "postgresql://postgres:TempPass123@34.55.232.223/benchmarks" -c "\dt"
 ```
 
 ## Next Steps
