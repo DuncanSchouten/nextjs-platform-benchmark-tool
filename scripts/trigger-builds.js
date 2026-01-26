@@ -77,9 +77,9 @@ async function pushToPlatformRepo(platform, tempDir) {
     exec('git config user.email "benchmark-bot@pantheon.io"', { cwd: platformTempDir });
     exec('git config user.name "Benchmark Bot"', { cwd: platformTempDir });
 
-    // Copy benchmark app files
+    // Copy benchmark app files (exclude platform subdirectories created during cloning)
     console.log('Copying benchmark app files...');
-    exec(`rsync -av --exclude='.git' ${tempDir}/ ${platformTempDir}/`, { silent: true });
+    exec(`rsync -av --exclude='.git' --exclude='pantheon' --exclude='vercel' --exclude='netlify' ${tempDir}/ ${platformTempDir}/`, { silent: true });
 
     // Commit and push
     process.chdir(platformTempDir);
