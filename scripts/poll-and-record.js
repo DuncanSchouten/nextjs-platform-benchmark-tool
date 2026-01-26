@@ -201,7 +201,10 @@ async function pollUntilDeployed(poller, expectedCommitSha, maxWaitMs) {
 
       if (checkResult.deployed) {
         const duration = (Date.now() - startTime) / 1000;
-        console.log(`[${poller.platform}] ✅ Deployed in ${duration.toFixed(2)}s (via ${checkResult.method})`);
+        const methodDescription = checkResult.method === 'api'
+          ? 'detected via /api/build-info endpoint'
+          : 'detected via HTML meta tag';
+        console.log(`[${poller.platform}] ✅ Deployed in ${duration.toFixed(2)}s (${methodDescription})`);
         return {
           status: 'success',
           completionTime: new Date(),
