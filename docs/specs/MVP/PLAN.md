@@ -265,7 +265,7 @@ CREATE TABLE platform_builds (
 - [ ] Implement Google SSO authentication (deferred to Phase 2)
 - [x] Deploy Cloud SQL instance (benchmark-db in us-central1, PostgreSQL 15)
 - [x] Run database migrations (benchmark_runs and platform_builds tables created)
-- [ ] Configure GitHub Secrets (DATABASE_URL, BENCHMARK_REPO_PAT, site URLs)
+- [x] Configure GitHub Secrets (DATABASE_URL, BENCHMARK_REPO_PAT, all site URLs)
 - [ ] Deploy dashboard to Pantheon
 - [ ] Debug Pantheon build failures (currently failing while Vercel/Netlify succeed)
 - [ ] Run first successful benchmark
