@@ -49,9 +49,9 @@ export default function BenchmarkChart({ runs }: BenchmarkChartProps) {
 
   if (runs.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow p-6 mb-8">
-        <h2 className="text-2xl font-bold mb-4">Build Time Trends</h2>
-        <div className="flex items-center justify-center h-64 text-gray-400">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-8">
+        <h2 className="text-2xl font-bold mb-4 dark:text-white">Build Time Trends</h2>
+        <div className="flex items-center justify-center h-64 text-gray-400 dark:text-gray-500">
           No benchmark data available
         </div>
       </div>
@@ -65,8 +65,8 @@ export default function BenchmarkChart({ runs }: BenchmarkChartProps) {
   const range = maxDuration - minDuration;
 
   return (
-    <div className="bg-white rounded-lg shadow p-6 mb-8">
-      <h2 className="text-2xl font-bold mb-6">Build Time Trends (Last 30 Runs)</h2>
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-8">
+      <h2 className="text-2xl font-bold mb-6 dark:text-white">Build Time Trends (Last 30 Runs)</h2>
 
       <div className="space-y-6">
         {Object.entries(chartData).map(([platform, data]) => {
@@ -82,14 +82,14 @@ export default function BenchmarkChart({ runs }: BenchmarkChartProps) {
                     className="w-3 h-3 rounded-full"
                     style={{ backgroundColor: platformColors[platform] }}
                   />
-                  <span className="font-semibold capitalize">{platform}</span>
+                  <span className="font-semibold capitalize dark:text-gray-300">{platform}</span>
                 </div>
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-gray-600 dark:text-gray-400">
                   Avg: {avg.toFixed(1)}s
                 </span>
               </div>
 
-              <div className="relative h-12 bg-gray-100 rounded">
+              <div className="relative h-12 bg-gray-100 dark:bg-gray-700 rounded">
                 {data.slice().reverse().map((point, idx) => {
                   const percentage = range > 0
                     ? ((point.duration - minDuration) / range) * 100
@@ -121,7 +121,7 @@ export default function BenchmarkChart({ runs }: BenchmarkChartProps) {
         })}
       </div>
 
-      <div className="mt-6 text-sm text-gray-500 text-center">
+      <div className="mt-6 text-sm text-gray-500 dark:text-gray-400 text-center">
         Showing last {runs.length} successful benchmark runs
       </div>
     </div>
