@@ -8,7 +8,7 @@ value = "false"
 
 [[build.env]]
 name = "GOOGLE_RUNTIME_VERSION"
-value = "20"
+value = "24"
 
 [[build.buildpacks]]
 uri = "gcr.io/buildpacks/nodejs"
@@ -17,17 +17,22 @@ uri = "gcr.io/buildpacks/nodejs"
 include = [
   "app/**",
   "components/**",
+  "contexts/**",
   "lib/**",
   "public/**",
   "*.js",
   "*.ts",
   "*.json",
   "*.mjs",
+  "*.css",
   "*.config.*",
-  "Procfile",
-  ".next/**"
+  "Procfile"
 ]
 
 [[build.env]]
 name = "GOOGLE_ENTRYPOINT"
 value = "npm run start"
+
+[[build.env]]
+name = "GOOGLE_BUILDABLE"
+value = "package.json"
