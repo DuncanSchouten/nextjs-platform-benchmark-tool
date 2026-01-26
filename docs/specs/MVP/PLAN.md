@@ -83,6 +83,12 @@ Each receives identical copies of `/benchmark-app` via GitHub Actions.
 
 **Purpose:** Representative of real customer workloads without being trivial or overly complex.
 
+**Deployment Tracking:**
+- `/api/build-info` endpoint returns current commit SHA and build time
+- HTML meta tag fallback: `<meta name="deployment-sha" content="..." />`
+- `COMMIT_SHA` environment variable injected at build time
+- Enables polling-based deployment completion detection
+
 **Future Variants:**
 - Minimal app (baseline overhead)
 - Heavy app (stress test)
@@ -105,11 +111,11 @@ Each receives identical copies of `/benchmark-app` via GitHub Actions.
    - Push `/benchmark-app` to `netlify-benchmark` repo
    - Record exact trigger timestamp for each
 
-3. **Poll Platform APIs**
-   - Poll **GCP Cloud Build API** for Pantheon build status (internal access)
-   - Poll **Vercel API** for build status
-   - Poll **Netlify API** for build status
+3. **Poll Deployed Sites**
+   - Poll **deployment URLs** for all platforms (HTTP polling)
+   - Check `/api/build-info` endpoint for current commit SHA
    - Run polls in parallel
+   - Deployment is "complete" when live site returns the expected commit SHA
    - Wait for all builds to complete (or timeout after 60 minutes)
 
 4. **Record Metrics**
@@ -122,12 +128,11 @@ Each receives identical copies of `/benchmark-app` via GitHub Actions.
    - Slack/email notification
 
 **Secrets Required:**
-- `GCP_PROJECT_ID` - GCP project where Pantheon builds run (internal)
-- `GCP_SERVICE_ACCOUNT_JSON` - Service account with Cloud Build Viewer role (internal)
-- `VERCEL_API_TOKEN` - API access for Vercel
-- `NETLIFY_API_TOKEN` - API access for Netlify
 - `DATABASE_URL` - PostgreSQL connection string
 - `BENCHMARK_REPO_PAT` - GitHub Personal Access Token to push to platform repos
+- `PANTHEON_SITE_URL` - URL of Pantheon deployment
+- `VERCEL_SITE_URL` - URL of Vercel deployment
+- `NETLIFY_SITE_URL` - URL of Netlify deployment
 
 ### 3. Database Schema
 
@@ -252,15 +257,14 @@ CREATE TABLE platform_builds (
 - [x] Set up Cloud SQL database schema + migrations (not yet deployed)
 - [x] Create GitHub Actions workflow
   - [x] Trigger builds on all platforms (git push via trigger-builds.js)
-  - [x] Implement GCP Cloud Build polling for Pantheon (poll-pantheon-internal.js created, needs internal credentials)
-  - [ ] Implement Vercel API polling (placeholder in poll-and-record.js)
-  - [ ] Implement Netlify API polling (placeholder in poll-and-record.js)
-  - [x] Record to database (poll-and-record.js created, needs testing)
+  - [ ] Implement `/api/build-info` endpoint in benchmark app
+  - [ ] Implement HTTP polling for all platforms (curl + jq)
+  - [ ] Add HTML meta tag fallback
+  - [x] Record to database (poll-and-record.js created, needs updating for HTTP polling)
 - [x] Build dashboard (basic charts and components)
 - [ ] Implement Google SSO authentication (deferred to Phase 2)
 - [ ] Deploy Cloud SQL instance
-- [ ] Obtain GCP service account credentials (internal DevOps)
-- [ ] Configure GitHub Secrets
+- [ ] Configure GitHub Secrets (DATABASE_URL, BENCHMARK_REPO_PAT, site URLs)
 - [ ] Deploy dashboard to Pantheon
 - [ ] Debug Pantheon build failures (currently failing while Vercel/Netlify succeed)
 - [ ] Run first successful benchmark
@@ -284,51 +288,69 @@ CREATE TABLE platform_builds (
 
 ## Platform-Specific Implementation Details
 
-### Pantheon (GCP Cloud Build Integration)
+### HTTP Polling Approach (All Platforms)
 
 **Architecture:**
-- Pantheon builds run on **Google Cloud Build** in Pantheon-owned GCP project
-- Deploys to **Google Cloud Run**
-- Internal Pantheon access allows querying Cloud Build API directly
+- No platform API access required
+- Polls live deployment URLs directly
+- Validates deployment completion by checking commit SHA
 
-**Implementation Approach:**
-- Use GCP Cloud Build API (not direct Pantheon API)
-- Service account with `roles/cloudbuild.builds.viewer` permission
-- Find builds by commit SHA or timestamp window
-- Poll Cloud Build status for completion
+**Implementation:**
+1. **Embed commit SHA in benchmark app** via `/api/build-info` endpoint:
+   ```typescript
+   // benchmark-app/src/app/api/build-info/route.ts
+   export async function GET() {
+     return Response.json({
+       commitSha: process.env.COMMIT_SHA || 'unknown',
+       buildTime: Date.now()
+     });
+   }
+   ```
 
-**Build Identification:**
-1. Push benchmark app to `pantheon-benchmark` repo
-2. Record commit SHA and trigger timestamp
-3. Query Cloud Build API to find build matching commit SHA
-4. Poll build status until completion
-5. Extract timing from Cloud Build metadata
+2. **Inject SHA at build time** via environment variable in each platform repo
 
-**See:** `docs/PANTHEON_INTEGRATION.md` for detailed setup
+3. **Poll until live:**
+   ```bash
+   EXPECTED_SHA=$(git rev-parse HEAD)
+   LIVE_SHA=$(curl -s "$DEPLOYMENT_URL/api/build-info" | jq -r '.commitSha')
+   # Deployment complete when LIVE_SHA == EXPECTED_SHA
+   ```
+
+4. **Timing:**
+   - Start: Record timestamp when git push completes
+   - End: Record timestamp when live site returns expected SHA
+   - Duration: End - Start
+
+**Polling Strategy:**
+- Poll every 10 seconds
+- Timeout after 60 minutes
+- Run all three platform polls in parallel
+- Include fallback to HTML meta tag if API endpoint fails
+
+### Pantheon
+
+**Deployment URL:** Set in `PANTHEON_SITE_URL` secret
+**Environment Variable:** Inject `COMMIT_SHA` in `.env.production` or build settings
 
 ### Vercel
 
-**Implementation:**
-- Vercel Deployments API: https://vercel.com/docs/rest-api/endpoints/deployments
-- Poll deployment status by ID
-- Standard REST API integration
+**Deployment URL:** Set in `VERCEL_SITE_URL` secret
+**Environment Variable:** `VERCEL_GIT_COMMIT_SHA` (automatically available) or manual `COMMIT_SHA`
 
 ### Netlify
 
-**Implementation:**
-- Netlify API: https://docs.netlify.com/api/get-started/
-- Poll deploy status by ID
-- Standard REST API integration
+**Deployment URL:** Set in `NETLIFY_SITE_URL` secret
+**Environment Variable:** `NETLIFY_COMMIT_REF` (automatically available) or manual `COMMIT_SHA`
 
 ## Open Questions / Decisions Needed
 
 1. **Exact time for daily benchmark run** - When is least likely to hit platform maintenance windows?
 2. **Benchmark app specifics** - What dependencies/features best represent target customer workload?
 3. **Cloud SQL instance sizing** - Start small, monitor query performance
-4. **Platform API rate limits** - Do we need to throttle polling?
+4. **HTTP polling interval** - 10 seconds provides ±10s precision; adjust if needed?
 5. **Timeout handling** - What constitutes a "failed" benchmark? (60 min timeout suggested)
 6. **Data retention policy** - Keep all historical data or aggregate/archive old runs?
-7. **GCP Project ID** - Confirm specific project where benchmark builds will run (internal DevOps team)
+7. **CDN propagation** - Should we poll from multiple geographic locations to verify global CDN deployment?
 
 ## Success Criteria
 
@@ -342,9 +364,11 @@ CREATE TABLE platform_builds (
 
 | Risk | Mitigation |
 |------|------------|
-| GCP Cloud Build API changes | Use stable v1 API; add error handling; monitor for breaking changes |
-| Build identification failures (Pantheon) | Multi-strategy search: commit SHA, timestamp window, fallback to manual |
-| Platform API changes (Vercel/Netlify) | Version API calls; add error handling; monitor for 4xx/5xx |
+| Site URL changes | Use environment variables for URLs; document in setup |
+| CDN caching affecting measurements | Poll `/api/build-info` (dynamic); add cache-control headers; fallback to HTML meta |
+| Deployment URL not immediately available | Increase poll timeout; add exponential backoff |
+| HTTP polling inaccuracy | Poll every 10s for ±10s precision; acceptable for daily trend tracking |
+| API endpoint fails to deploy | Fallback to HTML meta tag with commit SHA |
 | GitHub Actions reliability | Add retry logic; manual trigger fallback |
 | Database connection issues | Connection pooling; retry logic; Cloud SQL uptime monitoring |
 | Build minute limits (Vercel/Netlify) | Daily frequency keeps usage low; monitor usage |
@@ -373,10 +397,10 @@ CREATE TABLE platform_builds (
 1. ~~Review and approve this plan~~ ✅
 2. ~~Create the three external benchmark repos (pantheon-benchmark, vercel-benchmark, netlify-benchmark)~~ ✅
 3. ~~Begin Phase 1 implementation~~ ✅ (In Progress)
-4. **Debug Pantheon build failures** - Currently Vercel and Netlify builds succeed but Pantheon fails
-5. Set up Cloud SQL instance
-6. Obtain GCP service account credentials (internal DevOps request)
-7. Configure GitHub Secrets for workflow
-8. Complete Vercel and Netlify API polling implementation
+4. **Implement `/api/build-info` endpoint** in benchmark app
+5. **Implement HTTP polling** in GitHub Actions workflow
+6. **Debug Pantheon build failures** - Currently Vercel and Netlify builds succeed but Pantheon fails
+7. Set up Cloud SQL instance
+8. Configure GitHub Secrets (DATABASE_URL, BENCHMARK_REPO_PAT, site URLs)
 9. Test end-to-end benchmark workflow
 10. Deploy dashboard to Pantheon
