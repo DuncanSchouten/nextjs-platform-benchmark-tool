@@ -20,8 +20,8 @@ const platformColors: Record<string, string> = {
 export default function StatsCards({ stats }: StatsCardsProps) {
   if (stats.length === 0) {
     return (
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-8">
-        <p className="text-yellow-800">No benchmark data available yet. Run your first benchmark to see stats!</p>
+      <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-6 mb-8">
+        <p className="text-yellow-800 dark:text-yellow-400">No benchmark data available yet. Run your first benchmark to see stats!</p>
       </div>
     );
   }
@@ -31,11 +31,11 @@ export default function StatsCards({ stats }: StatsCardsProps) {
       {stats.map((stat) => (
         <div
           key={stat.platform}
-          className="bg-white rounded-lg shadow-lg p-6 border-t-4"
+          className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border-t-4"
           style={{ borderColor: platformColors[stat.platform] || '#6366f1' }}
         >
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold capitalize text-gray-700">
+            <h3 className="text-lg font-semibold capitalize text-gray-700 dark:text-gray-300">
               {stat.platform}
             </h3>
             <div
@@ -45,28 +45,28 @@ export default function StatsCards({ stats }: StatsCardsProps) {
 
           <div className="space-y-3">
             <div>
-              <div className="text-3xl font-bold text-gray-900">
+              <div className="text-3xl font-bold text-gray-900 dark:text-white">
                 {stat.avgDuration.toFixed(1)}s
               </div>
-              <div className="text-sm text-gray-500">Average Build Time</div>
+              <div className="text-sm text-gray-500 dark:text-gray-400">Average Build Time</div>
             </div>
 
-            <div className="pt-3 border-t border-gray-200">
+            <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
               <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-600">Success Rate</span>
-                <span className="font-semibold text-green-600">
+                <span className="text-gray-600 dark:text-gray-400">Success Rate</span>
+                <span className="font-semibold text-green-600 dark:text-green-400">
                   {stat.successRate.toFixed(1)}%
                 </span>
               </div>
 
               <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-600">Total Builds</span>
-                <span className="font-semibold">{stat.totalBuilds}</span>
+                <span className="text-gray-600 dark:text-gray-400">Total Builds</span>
+                <span className="font-semibold dark:text-gray-300">{stat.totalBuilds}</span>
               </div>
 
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Range</span>
-                <span className="font-semibold text-gray-700">
+                <span className="text-gray-600 dark:text-gray-400">Range</span>
+                <span className="font-semibold text-gray-700 dark:text-gray-300">
                   {stat.minDuration.toFixed(1)}s - {stat.maxDuration.toFixed(1)}s
                 </span>
               </div>
