@@ -11,6 +11,11 @@ on:
         required: false
         type: string
 
+# Prevent concurrent benchmark runs
+concurrency:
+  group: benchmark
+  cancel-in-progress: false
+
 jobs:
   benchmark:
     runs-on: ubuntu-latest
