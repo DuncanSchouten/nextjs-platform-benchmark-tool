@@ -266,7 +266,7 @@ CREATE TABLE platform_builds (
 - [x] Deploy Cloud SQL instance (benchmark-db in us-central1, PostgreSQL 15)
 - [x] Run database migrations (benchmark_runs and platform_builds tables created)
 - [x] Configure GitHub Secrets (DATABASE_URL, BENCHMARK_REPO_PAT, all site URLs)
-- [ ] Deploy dashboard to Pantheon
+- [x] Deploy dashboard to Pantheon (code deployed, needs DATABASE_URL env var set manually)
 - [ ] Debug Pantheon build failures (currently failing while Vercel/Netlify succeed)
 - [ ] Run first successful benchmark
 
