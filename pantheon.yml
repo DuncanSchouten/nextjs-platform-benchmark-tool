@@ -1,0 +1,10 @@
+api_version: 1
+
+# Root-level pantheon.yml for monorepo
+# This tells Pantheon to build from the dashboard/ directory
+
+# Build from dashboard subdirectory
+build:
+  working_directory: dashboard
+
+# The rest of the configuration is in dashboard/pantheon.yml
