@@ -257,10 +257,10 @@ CREATE TABLE platform_builds (
 - [x] Set up Cloud SQL database schema + migrations (not yet deployed)
 - [x] Create GitHub Actions workflow
   - [x] Trigger builds on all platforms (git push via trigger-builds.js)
-  - [ ] Implement `/api/build-info` endpoint in benchmark app
-  - [ ] Implement HTTP polling for all platforms (curl + jq)
-  - [ ] Add HTML meta tag fallback
-  - [x] Record to database (poll-and-record.js created, needs updating for HTTP polling)
+  - [x] Implement `/api/build-info` endpoint in benchmark app
+  - [x] Implement HTTP polling for all platforms (Node.js with https/http modules)
+  - [x] Add HTML meta tag fallback
+  - [x] Record to database (poll-and-record.js updated with HTTP polling)
 - [x] Build dashboard (basic charts and components)
 - [ ] Implement Google SSO authentication (deferred to Phase 2)
 - [ ] Deploy Cloud SQL instance
