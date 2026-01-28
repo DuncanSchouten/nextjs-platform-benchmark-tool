@@ -71,11 +71,40 @@ These secrets are used in `.github/workflows/benchmark.yml`:
   run: node scripts/poll-and-record.js
 ```
 
+## Running Deployments Locally
+
+When running the deployment script locally (outside of GitHub Actions), you need to provide a `GITHUB_TOKEN` environment variable. The easiest way to do this is using the GitHub CLI:
+
+```bash
+# Trigger builds on all platforms with your local GitHub token
+GITHUB_TOKEN=$(gh auth token) node scripts/trigger-builds.js
+```
+
+**Prerequisites:**
+- GitHub CLI (`gh`) must be installed and authenticated
+- Run `gh auth status` to verify you're logged in
+- Your GitHub account must have write access to the benchmark repositories
+
+**Authentication:**
+```bash
+# Check if you're authenticated
+gh auth status
+
+# If not authenticated, log in
+gh auth login
+
+# Verify your token has the required scopes (should include 'repo')
+gh auth status
+```
+
+The `gh auth token` command retrieves your current GitHub CLI authentication token, which has the necessary permissions to push to the benchmark repositories.
+
 ## Security Notes
 
 - **DATABASE_URL**: Contains database password - keep secure
 - **BENCHMARK_REPO_PAT**: Has write access to benchmark repos - rotate periodically
 - **Site URLs**: Public URLs, but stored as secrets for easy configuration
+- **Local GITHUB_TOKEN**: When using `gh auth token`, the token is temporary and tied to your local session
 
 ## Next Steps
 
