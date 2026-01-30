@@ -171,6 +171,11 @@ CREATE TABLE platform_builds (
 );
 ```
 
+#### Query Behavior:
+- **Timeout Handling:** Records with `status = 'timeout'` are excluded from `AVG()`, `MIN()`, and `MAX()` duration calculations using PostgreSQL's `FILTER` clause
+- Timeout records are still counted in total build counts and success rate calculations
+- This prevents outlier timeout values (e.g., 3600s) from skewing average performance metrics
+
 #### Future tables:
 - `runtime_metrics` - TTFB, cold starts, etc.
 - `performance_scores` - Lighthouse scores
@@ -191,6 +196,7 @@ CREATE TABLE platform_builds (
    - Latest build times (all platforms)
    - Trend chart (last 30 days)
    - Success rate by platform
+   - **Data Processing:** Timeout results are excluded from average, min, and max calculations but included in total build counts and success rate percentages
 
 2. **Historical Comparison**
    - Line chart: build times over time

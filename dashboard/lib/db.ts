@@ -115,10 +115,10 @@ export async function getPlatformStats() {
     `SELECT
       platform,
       COUNT(*) as total_builds,
-      AVG(duration_seconds) as avg_duration,
+      AVG(duration_seconds) FILTER (WHERE status != 'timeout') as avg_duration,
       (COUNT(*) FILTER (WHERE status = 'success')::float / COUNT(*)::float * 100) as success_rate,
-      MIN(duration_seconds) as min_duration,
-      MAX(duration_seconds) as max_duration
+      MIN(duration_seconds) FILTER (WHERE status != 'timeout') as min_duration,
+      MAX(duration_seconds) FILTER (WHERE status != 'timeout') as max_duration
      FROM platform_builds
      WHERE status != 'in_progress'
      GROUP BY platform
