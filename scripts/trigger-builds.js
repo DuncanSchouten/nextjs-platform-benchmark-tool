@@ -106,17 +106,22 @@ async function pushToPlatformRepo(platform, tempDir) {
       };
     }
 
-    // Get the commit SHA and create commit-sha.json in a SECOND commit
-    // (We can't include the file in the first commit because we don't know the SHA yet)
-    const commitSha = exec('git rev-parse HEAD', { silent: true }).trim();
-    const commitShaFile = path.join(platformTempDir, 'commit-sha.json');
-    fs.writeFileSync(commitShaFile, JSON.stringify({ commitSha }, null, 2));
+    let finalCommitSha = exec('git rev-parse HEAD', { silent: true }).trim();
 
-    exec('git add commit-sha.json');
-    exec(`git commit -m "Add commit SHA metadata"`);
+    // Only create commit-sha.json for Pantheon (Vercel/Netlify have native env vars)
+    if (platform.name === 'pantheon') {
+      // Get the commit SHA and create commit-sha.json in a SECOND commit
+      // (We can't include the file in the first commit because we don't know the SHA yet)
+      const commitSha = finalCommitSha;
+      const commitShaFile = path.join(platformTempDir, 'commit-sha.json');
+      fs.writeFileSync(commitShaFile, JSON.stringify({ commitSha }, null, 2));
 
-    // Get the FINAL commit SHA (this is what we'll return and what Pantheon will build)
-    const finalCommitSha = exec('git rev-parse HEAD', { silent: true }).trim();
+      exec('git add commit-sha.json');
+      exec(`git commit -m "Add commit SHA metadata"`);
+
+      // Get the FINAL commit SHA (this is what Pantheon will build)
+      finalCommitSha = exec('git rev-parse HEAD', { silent: true }).trim();
+    }
 
     console.log('Pushing to remote...');
     exec('git push origin main');
