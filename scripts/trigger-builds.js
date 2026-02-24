@@ -106,21 +106,20 @@ async function pushToPlatformRepo(platform, tempDir) {
       };
     }
 
-    // Get the commit SHA AFTER committing
+    // Get the commit SHA and create commit-sha.json in a SECOND commit
+    // (We can't include the file in the first commit because we don't know the SHA yet)
     const commitSha = exec('git rev-parse HEAD', { silent: true }).trim();
-
-    // Create commit-sha.json with the actual commit SHA
-    // (Pantheon doesn't have .git during build, so git rev-parse HEAD fails there)
-    // Can't use .env because it's in .gitignore
     const commitShaFile = path.join(platformTempDir, 'commit-sha.json');
     fs.writeFileSync(commitShaFile, JSON.stringify({ commitSha }, null, 2));
 
-    // Amend the commit to include commit-sha.json
     exec('git add commit-sha.json');
-    exec(`git commit --amend --no-edit`);
+    exec(`git commit -m "Add commit SHA metadata"`);
+
+    // Get the FINAL commit SHA (this is what we'll return and what Pantheon will build)
+    const finalCommitSha = exec('git rev-parse HEAD', { silent: true }).trim();
 
     console.log('Pushing to remote...');
-    exec('git push origin main --force');
+    exec('git push origin main');
 
     console.log(`✅ Successfully triggered build for ${platform.name}`);
 
@@ -128,7 +127,7 @@ async function pushToPlatformRepo(platform, tempDir) {
       platform: platform.name,
       triggered: true,
       timestamp: new Date().toISOString(),
-      commitHash: commitSha
+      commitHash: finalCommitSha
     };
 
   } catch (error) {
