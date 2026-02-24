@@ -28,7 +28,7 @@ const getCommitSha = () => {
         }
       }
     } catch (err) {
-      console.warn('Could not read commit-sha.json:', err.message);
+      console.warn('Could not read commit-sha.json:', err instanceof Error ? err.message : String(err));
     }
 
     // Fallback: extract from git (works when .git is available)
