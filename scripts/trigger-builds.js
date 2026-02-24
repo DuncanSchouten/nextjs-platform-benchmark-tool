@@ -119,8 +119,10 @@ async function pushToPlatformRepo(platform, tempDir) {
       exec('git add commit-sha.json');
       exec(`git commit -m "Add commit SHA metadata"`);
 
-      // Get the FINAL commit SHA (this is what Pantheon will build)
-      finalCommitSha = exec('git rev-parse HEAD', { silent: true }).trim();
+      // For Pantheon, return the PARENT commit SHA (the actual code commit)
+      // because that's what the deployed site will return from /api/build-info
+      // The metadata commit is just for bookkeeping
+      // finalCommitSha stays as the parent commit SHA
     }
 
     console.log('Pushing to remote...');
