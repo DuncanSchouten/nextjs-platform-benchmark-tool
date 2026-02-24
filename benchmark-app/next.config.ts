@@ -15,7 +15,23 @@ const getCommitSha = () => {
       return process.env.COMMIT_SHA;
     }
 
-    // Fallback: extract from git (works on Pantheon and other platforms)
+    // Try commit-sha.json file (for Pantheon, created by trigger-builds.js)
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      const commitShaPath = path.join(process.cwd(), 'commit-sha.json');
+      if (fs.existsSync(commitShaPath)) {
+        const data = JSON.parse(fs.readFileSync(commitShaPath, 'utf8'));
+        if (data.commitSha) {
+          console.log('✅ Using commit SHA from commit-sha.json');
+          return data.commitSha;
+        }
+      }
+    } catch (err) {
+      console.warn('Could not read commit-sha.json:', err.message);
+    }
+
+    // Fallback: extract from git (works when .git is available)
     const sha = execSync('git rev-parse HEAD').toString().trim();
     return sha;
   } catch (error) {
