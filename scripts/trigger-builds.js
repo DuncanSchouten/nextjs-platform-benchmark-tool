@@ -86,6 +86,12 @@ async function pushToPlatformRepo(platform, tempDir) {
     const timestampFile = path.join(platformTempDir, '.benchmark-timestamp');
     fs.writeFileSync(timestampFile, `Benchmark run: ${timestamp}\n`);
 
+    // Create .env file with commit SHA for Pantheon builds
+    // (Pantheon doesn't have .git during build, so git rev-parse HEAD fails)
+    const envFile = path.join(platformTempDir, '.env');
+    const commitSha = exec('git rev-parse HEAD', { cwd: platformTempDir, silent: true }).trim();
+    fs.writeFileSync(envFile, `COMMIT_SHA=${commitSha}\n`);
+
     // Commit and push
     process.chdir(platformTempDir);
 
