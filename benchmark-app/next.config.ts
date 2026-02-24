@@ -16,6 +16,7 @@ const getCommitSha = () => {
     }
 
     // Try commit-sha.json file (for Pantheon, created by trigger-builds.js)
+    // This file contains the parent commit's SHA, which is what we deployed
     try {
       const fs = require('fs');
       const path = require('path');
@@ -23,12 +24,24 @@ const getCommitSha = () => {
       if (fs.existsSync(commitShaPath)) {
         const data = JSON.parse(fs.readFileSync(commitShaPath, 'utf8'));
         if (data.commitSha) {
-          console.log('✅ Using commit SHA from commit-sha.json');
+          console.log('✅ Using commit SHA from commit-sha.json (parent commit)');
           return data.commitSha;
         }
       }
     } catch (err) {
       console.warn('Could not read commit-sha.json:', err instanceof Error ? err.message : String(err));
+    }
+
+    // Also try getting parent commit SHA if we're in a git repo
+    // (This handles the case where we're on the "Add commit SHA metadata" commit)
+    try {
+      const parentSha = execSync('git rev-parse HEAD^').toString().trim();
+      if (parentSha && parentSha.length === 40) {
+        console.log('✅ Using parent commit SHA from git');
+        return parentSha;
+      }
+    } catch (err) {
+      // Git not available or no parent commit
     }
 
     // Fallback: extract from git (works when .git is available)
