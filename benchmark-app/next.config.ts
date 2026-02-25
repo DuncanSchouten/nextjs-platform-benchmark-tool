@@ -8,8 +8,9 @@ const getCommitSha = () => {
     if (process.env.VERCEL_GIT_COMMIT_SHA) {
       return process.env.VERCEL_GIT_COMMIT_SHA;
     }
-    if (process.env.NETLIFY_COMMIT_REF) {
-      return process.env.NETLIFY_COMMIT_REF;
+    // Netlify uses COMMIT_REF (not NETLIFY_COMMIT_REF)
+    if (process.env.COMMIT_REF) {
+      return process.env.COMMIT_REF;
     }
     if (process.env.COMMIT_SHA) {
       return process.env.COMMIT_SHA;
