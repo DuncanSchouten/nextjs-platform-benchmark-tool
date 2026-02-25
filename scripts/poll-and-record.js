@@ -219,6 +219,8 @@ async function pollUntilDeployed(poller, expectedCommitSha, maxWaitMs) {
       // Log progress
       if (checkResult.liveCommitSha !== lastLiveCommitSha) {
         console.log(`[${poller.platform}] 🔄 Live SHA: ${checkResult.liveCommitSha?.substring(0, 7) || 'unknown'}, Expected: ${expectedCommitSha.substring(0, 7)}`);
+        console.log(`[${poller.platform}] 📊 Full Live SHA: ${checkResult.liveCommitSha || 'unknown'}`);
+        console.log(`[${poller.platform}] 📊 Full Expected SHA: ${expectedCommitSha}`);
         lastLiveCommitSha = checkResult.liveCommitSha;
       }
 
