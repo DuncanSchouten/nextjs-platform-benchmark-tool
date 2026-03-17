@@ -2,8 +2,8 @@ name: Platform Benchmark
 
 on:
   schedule:
-    # Run daily at 2:00 AM UTC (6:00 PM PST previous day)
-    - cron: '0 2 * * *'
+    # Run every 30 minutes
+    - cron: '*/30 * * * *'
   workflow_dispatch: # Allow manual triggering
     inputs:
       notes:
