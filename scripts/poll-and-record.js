@@ -15,7 +15,8 @@ const http = require('http');
 // Configuration
 const POLL_INTERVAL_MS = 10000; // 10 seconds
 const MAX_WAIT_TIME_MS = 60 * 60 * 1000; // 60 minutes
-const PLATFORMS = ['pantheon', 'vercel', 'netlify'];
+// TODO: Re-enable 'vercel' and 'netlify' when ready
+const PLATFORMS = ['pantheon'];
 
 class BenchmarkRecorder {
   constructor() {

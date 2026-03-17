@@ -16,16 +16,17 @@ const PLATFORMS = [
     repo: 'DuncanSchouten/pantheon-benchmark',
     method: 'git'
   },
-  {
-    name: 'vercel',
-    repo: 'DuncanSchouten/vercel-benchmark',
-    method: 'git'
-  },
-  {
-    name: 'netlify',
-    repo: 'DuncanSchouten/netlify-benchmark',
-    method: 'git'
-  }
+  // TODO: Re-enable Vercel and Netlify builds
+  // {
+  //   name: 'vercel',
+  //   repo: 'DuncanSchouten/vercel-benchmark',
+  //   method: 'git'
+  // },
+  // {
+  //   name: 'netlify',
+  //   repo: 'DuncanSchouten/netlify-benchmark',
+  //   method: 'git'
+  // }
 ];
 
 function exec(command, options = {}) {
