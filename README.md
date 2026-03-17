@@ -5,7 +5,7 @@ An automated benchmarking system to continuously monitor and compare Next.js bui
 ## Overview
 
 This tool provides:
-- **Automated daily benchmarks** via GitHub Actions
+- **Automated benchmarks every 10 minutes** via GitHub Actions
 - **Historical performance tracking** in PostgreSQL
 - **Internal dashboard** for monitoring competitive positioning
 - **Fair comparisons** with simultaneous builds across platforms
@@ -14,7 +14,7 @@ This tool provides:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    GitHub Actions (Daily Cron)               │
+│                GitHub Actions (Every 10 minutes)              │
 │  1. Push benchmark app to 3 platform repos                  │
 │  2. Poll platform APIs for build completion                 │
 │  3. Record metrics to Cloud SQL                             │
@@ -101,11 +101,11 @@ Connect each repository to its respective platform:
 Add the following secrets to your main repository (Settings → Secrets and variables → Actions):
 
 ```
-BENCHMARK_REPO_PAT       - GitHub Personal Access Token with repo access
+BENCHMARK_REPO_PAT       - GitHub Personal Access Token with repo scope
 DATABASE_URL             - PostgreSQL connection string
-PANTHEON_API_TOKEN       - Pantheon API access token
-VERCEL_API_TOKEN         - Vercel API access token
-NETLIFY_API_TOKEN        - Netlify API access token
+PANTHEON_SITE_URL        - Pantheon deployment URL
+VERCEL_SITE_URL          - Vercel deployment URL
+NETLIFY_SITE_URL         - Netlify deployment URL
 ```
 
 ### 4. Update Repository Names
@@ -168,7 +168,7 @@ npm run build:dashboard
 
 ## GitHub Actions Workflow
 
-The benchmark runs automatically daily at 2:00 AM UTC. You can also trigger it manually:
+The benchmark runs automatically every 10 minutes. You can also trigger it manually:
 
 1. Go to **Actions** tab in GitHub
 2. Select **Platform Benchmark** workflow
@@ -288,9 +288,9 @@ To manually trigger a benchmark outside of GitHub Actions:
 # Set environment variables
 export GITHUB_TOKEN="your-pat"
 export DATABASE_URL="your-connection-string"
-export PANTHEON_API_TOKEN="..."
-export VERCEL_API_TOKEN="..."
-export NETLIFY_API_TOKEN="..."
+export PANTHEON_SITE_URL="https://your-pantheon-site.pantheonsite.io"
+export VERCEL_SITE_URL="https://your-vercel-site.vercel.app"
+export NETLIFY_SITE_URL="https://your-netlify-site.netlify.app"
 
 # Run the scripts
 node scripts/trigger-builds.js
