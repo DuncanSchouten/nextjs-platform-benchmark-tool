@@ -1,0 +1,10 @@
+{
+  "targets": {
+    "pantheon": 300,
+    "vercel": null,
+    "netlify": null
+  },
+  "defaultRange": "7d",
+  "pageSize": 25,
+  "rollingAverageWindow": 5
+}

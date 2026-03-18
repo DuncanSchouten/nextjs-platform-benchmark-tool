@@ -1,3 +1,5 @@
+'use client';
+
 interface PlatformBuild {
   platform: 'pantheon' | 'vercel' | 'netlify';
   duration_seconds: number | null;
@@ -7,7 +9,7 @@ interface PlatformBuild {
 
 interface BenchmarkRun {
   id: number;
-  run_timestamp: Date;
+  run_timestamp: string;
   trigger_type: string;
   notes: string | null;
   builds: PlatformBuild[];
@@ -15,6 +17,10 @@ interface BenchmarkRun {
 
 interface RecentRunsProps {
   runs: BenchmarkRun[];
+  totalCount: number;
+  page: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
 }
 
 function formatDuration(seconds: number | null): string {
@@ -37,12 +43,12 @@ function getStatusBadge(status: string) {
   );
 }
 
-export default function RecentRuns({ runs }: RecentRunsProps) {
+export default function RecentRuns({ runs, totalCount, page, totalPages, onPageChange }: RecentRunsProps) {
   if (runs.length === 0) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <h2 className="text-2xl font-bold mb-4 dark:text-white">Recent Runs</h2>
-        <p className="text-gray-500 dark:text-gray-400">No benchmark runs available yet.</p>
+        <p className="text-gray-500 dark:text-gray-400">No benchmark runs available for this time range.</p>
       </div>
     );
   }
@@ -63,7 +69,7 @@ export default function RecentRuns({ runs }: RecentRunsProps) {
             </tr>
           </thead>
           <tbody>
-            {runs.slice(0, 10).map((run) => {
+            {runs.map((run) => {
               const buildsByPlatform = run.builds.reduce((acc, build) => {
                 acc[build.platform] = build;
                 return acc;
@@ -110,11 +116,31 @@ export default function RecentRuns({ runs }: RecentRunsProps) {
         </table>
       </div>
 
-      {runs.length > 10 && (
-        <div className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
-          Showing 10 of {runs.length} runs
+      {/* Pagination */}
+      <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <span className="text-sm text-gray-500 dark:text-gray-400">
+          Showing {runs.length} of {totalCount} runs
+        </span>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => onPageChange(page - 1)}
+            disabled={page <= 1}
+            className="px-3 py-1.5 rounded text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Previous
+          </button>
+          <span className="text-sm text-gray-600 dark:text-gray-400">
+            Page {page} of {totalPages}
+          </span>
+          <button
+            onClick={() => onPageChange(page + 1)}
+            disabled={page >= totalPages}
+            className="px-3 py-1.5 rounded text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Next
+          </button>
         </div>
-      )}
+      </div>
     </div>
   );
 }
